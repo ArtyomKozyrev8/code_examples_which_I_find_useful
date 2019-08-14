@@ -57,3 +57,26 @@ def return_n_s(name, surname):
     return name, surname
 
 print(return_n_s("Mark", "Stew"))
+
+#Example4
+def word_decorator(_struct="{}_"):
+    def decorator(f):
+        def decorated_f(*args):
+            new_args = f(*args)
+            n = len(new_args)
+            new_struct = _struct * n
+            print(new_struct)
+            print(new_args)
+            return new_struct.format(*new_args)
+        return decorated_f
+    return decorator
+
+
+@word_decorator("Structure  {} ")
+def take_return(*args):
+    new_args = []
+    for i in args:
+        new_args.append(i + "X")
+    return new_args
+
+print(take_return("X1", "Y1", "Z1", "G", "H", "O"))
