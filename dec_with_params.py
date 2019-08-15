@@ -80,3 +80,38 @@ def take_return(*args):
     return new_args
 
 print(take_return("X1", "Y1", "Z1", "G", "H", "O"))
+
+#Example5 timeit with args increase decorator
+
+import time
+
+
+def increased_args_timeit(increase=False):
+    def timeit_dec(f):
+        def decorated_f(*args, **kwargs):
+            t1 = time.perf_counter()
+            print("Start work...")
+            if increase:
+                new_args = [i + 1 for i in args]
+            else:
+                new_args = args
+            result = f(*new_args, **kwargs)
+            print("End work: {}".format(time.perf_counter() - t1))
+            return result
+        return decorated_f
+    return timeit_dec
+
+
+@increased_args_timeit(True)
+def do_some_work(*args, **kwargs):
+    _sum = 0
+    for i in args:
+        _sum += i
+        time.sleep(0.3)
+    for j in kwargs.values():
+        _sum += j
+        time.sleep(0.3)
+    return _sum
+
+
+print(do_some_work(1, 2, 3, 4, 5, 6, 3, 3, 3, k1=1, k2=2, k3=3))
