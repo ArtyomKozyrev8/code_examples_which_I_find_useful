@@ -8,15 +8,15 @@ def my_factory(loop, coro):
     return f
 
 
-async def pook():
+async def test():
     for i in range(5):
         print(f"Step-{i}")
         await asyncio.sleep(1)
 
 
 async def main():
-    x = asyncio.create_task(pook())
-    y = asyncio.create_task(pook())
+    x = asyncio.create_task(test())
+    y = asyncio.create_task(test())
     await x
     await y
     print(x.name)
