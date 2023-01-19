@@ -5,10 +5,10 @@ METHOD_SIGNATURE = "(self, melody: str = None) -> None"
 METHOD_NAME = "music"
 
 
-def check_that_class_has_method_music(cls: object, method_name: str, method_signature):
+def check_that_class_has_method_music(cls: object, method_name: str, method_signature: str) -> object:
     """This class decorator checks that class has method which have a certain signature."""
 
-    base_error_message = f"class should implement '{METHOD_NAME}' method," \
+    base_error_message = f"class should implement '{method_name}' method," \
                          f" which have the following signature: '{method_signature}'."
 
     method = getattr(cls, method_name, None)
