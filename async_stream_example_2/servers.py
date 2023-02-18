@@ -97,9 +97,31 @@ async def run_server(
         await server.serve_forever()
 
 
+async def grateful_shutdown_windows() -> None:
+    cur_task = asyncio.current_task()
+    tasks = [t for t in asyncio.all_tasks() if t is not cur_task]
+    for t in tasks:
+        t.cancel()
+
+    await asyncio.gather(*tasks, return_exceptions=True)
+
+
+def server_done_callback(fut: asyncio.Future, server_name: str) -> None:
+    if fut.cancelled():
+        print(f"Server {server_name} was stopped!")
+
+
 if __name__ == '__main__':
-    loop = asyncio.get_event_loop()
-    loop.create_task(run_server("0.0.0.0", 9999, chunk_read_size=10))
-    loop.create_task(run_server("0.0.0.0", 8888, welcome_slogan="Welcome to home server!"))
-    loop.create_task(run_server("0.0.0.0", 7777, welcome_slogan="Welcome to borring server!"))
-    loop.run_forever()
+    try:
+        loop = asyncio.get_event_loop()
+        server_tasks = (
+            loop.create_task(run_server("0.0.0.0", 9999, chunk_read_size=10)),
+            loop.create_task(run_server("0.0.0.0", 8888, welcome_slogan="Welcome to home server!")),
+            loop.create_task(run_server("0.0.0.0", 7777, welcome_slogan="Welcome to borring server!")),
+        )
+        names = ("0.0.0.0:9999", "0.0.0.0:8888", "0.0.0.0:7777")
+        [t.add_done_callback(partial(server_done_callback, server_name=name)) for name, t in zip(names, server_tasks)]
+        loop.run_forever()
+    except KeyboardInterrupt as ex:
+        loop.run_until_complete(grateful_shutdown_windows())
+        loop.stop()
