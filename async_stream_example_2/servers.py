@@ -2,6 +2,7 @@ import asyncio
 from datetime import datetime
 from functools import partial
 import io
+import platform
 import socket
 
 
@@ -97,7 +98,7 @@ async def run_server(
         await server.serve_forever()
 
 
-async def grateful_shutdown_windows() -> None:
+async def grateful_shutdown() -> None:
     cur_task = asyncio.current_task()
     tasks = [t for t in asyncio.all_tasks() if t is not cur_task]
     for t in tasks:
@@ -112,8 +113,12 @@ def server_done_callback(fut: asyncio.Future, server_name: str) -> None:
 
 
 if __name__ == '__main__':
+    # FIXME raises Exception ignored in: <function _ProactorBasePipeTransport.__del__ at ...
+    #  RuntimeError: Event loop is closed on Windows with ProactorEventLoop
+
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
     try:
-        loop = asyncio.get_event_loop()
         server_tasks = (
             loop.create_task(run_server("0.0.0.0", 9999, chunk_read_size=10)),
             loop.create_task(run_server("0.0.0.0", 8888, welcome_slogan="Welcome to home server!")),
@@ -122,6 +127,13 @@ if __name__ == '__main__':
         names = ("0.0.0.0:9999", "0.0.0.0:8888", "0.0.0.0:7777")
         [t.add_done_callback(partial(server_done_callback, server_name=name)) for name, t in zip(names, server_tasks)]
         loop.run_forever()
-    except KeyboardInterrupt as ex:
-        loop.run_until_complete(grateful_shutdown_windows())
-        loop.stop()
+    except KeyboardInterrupt:
+        pass
+    finally:
+        loop.run_until_complete(grateful_shutdown())
+        loop.run_until_complete(loop.shutdown_asyncgens())
+        loop.run_until_complete(loop.shutdown_default_executor())
+        asyncio.set_event_loop(None)
+        if not loop.is_closed():
+            loop.close()
+
