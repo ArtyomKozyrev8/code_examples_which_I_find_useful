@@ -2,6 +2,7 @@ import asyncio
 from functools import partial
 import socket
 import logging
+from io import BytesIO
 
 from async_stream_plus_structs.logger import logger as log
 from async_stream_plus_structs.structs_for_server_clients import (
@@ -46,11 +47,9 @@ async def server_callback(
     while True:
         try:
             data = await asyncio.wait_for(reader.read(chunk_read_size), timeout=client_timeout)
-
-            if data == b'' or reader.at_eof():
-                break
-
             input_bytes.extend(data)
+            if reader.at_eof():
+                break
 
         except asyncio.TimeoutError:
             log.error(f"Server {server_host}:{server_port} broke connection with {in_host}:{in_port} due to timeout.")
